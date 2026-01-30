@@ -1,0 +1,33 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build outputs
+*.xpi
+*.zip
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+*.b64
+*.svg
+
+# Development files
+classifier.js
+
+# Local development
+.env
+.env.local

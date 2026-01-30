@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Spam Detection Results</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      margin: 0 0 10px 0;
+      font-size: 24px;
+    }
+
+    .summary {
+      display: flex;
+      gap: 30px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .summary-value {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .filters {
+      background: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .filters label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .filters select, .filters input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .filters input[type="text"] {
+      width: 250px;
+    }
+
+    .results-table {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th {
+      background: #f8f9fa;
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      color: #666;
+      border-bottom: 2px solid #eee;
+    }
+
+    /* Column widths */
+    th:nth-child(1), td:nth-child(1) { width: 40px; }  /* Checkbox */
+    th:nth-child(2), td:nth-child(2) { width: 25%; }   /* Subject */
+    th:nth-child(3), td:nth-child(3) { width: 15%; }   /* From */
+    th:nth-child(4), td:nth-child(4) { width: 12%; }   /* Date */
+    th:nth-child(5), td:nth-child(5) { width: 8%; }    /* Probability */
+    th:nth-child(6), td:nth-child(6) { width: 18%; }   /* Keywords */
+    th:nth-child(7), td:nth-child(7) { width: 130px; } /* Actions */
+
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+      vertical-align: middle;
+      overflow: hidden;
+    }
+
+    tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .probability {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .probability.high {
+      background-color: #fee2e2;
+      color: #dc2626;
+    }
+
+    .probability.medium {
+      background-color: #fef3c7;
+      color: #d97706;
+    }
+
+    .probability.low {
+      background-color: #d1fae5;
+      color: #059669;
+    }
+
+    .subject {
+      font-weight: 500;
+      color: #333;
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sender {
+      color: #666;
+      font-size: 13px;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .date {
+      color: #888;
+      font-size: 13px;
+      white-space: nowrap;
+      min-width: 100px;
+    }
+
+    .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      max-width: 180px;
+    }
+
+    .keyword {
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      min-width: 120px;
+    }
+
+    .btn {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-move {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-move:hover {
+      background: #c0392b;
+    }
+
+    .btn-safe {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-safe:hover {
+      background: #059669;
+    }
+
+    .btn-view {
+      background: #6366f1;
+      color: white;
+    }
+
+    .btn-view:hover {
+      background: #4f46e5;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state h2 {
+      color: #10b981;
+      margin-bottom: 10px;
+    }
+
+    .batch-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .batch-actions button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-batch-move {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-batch-move:hover {
+      background: #c0392b;
+    }
+
+    .btn-batch-safe {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-batch-safe:hover {
+      background: #059669;
+    }
+
+    .checkbox-cell {
+      width: 40px;
+    }
+
+    .select-all {
+      cursor: pointer;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #e74c3c;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .row-moved {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+
+    .status-moved {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status-safe {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .detection-method {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .method-header {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+    }
+
+    .method-ml {
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+    }
+
+    /* Toast notifications */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      animation: toast-in 0.3s ease;
+    }
+
+    .toast-success {
+      background: #10b981;
+      color: white;
+    }
+
+    .toast-error {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .toast-fade {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    /* Button disabled state */
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Sortable headers */
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 25px;
+    }
+
+    th.sortable:hover {
+      background: #eef0f2;
+    }
+
+    th.sortable::after {
+      content: '⇅';
+      position: absolute;
+      right: 8px;
+      opacity: 0.3;
+      font-size: 12px;
+    }
+
+    th.sortable.sort-asc::after {
+      content: '↑';
+      opacity: 1;
+    }
+
+    th.sortable.sort-desc::after {
+      content: '↓';
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Spam Detection Results</h1>
+      <div class="summary">
+        <div class="summary-item">
+          <span>Total Scanned:</span>
+          <span class="summary-value" id="totalScanned">0</span>
+        </div>
+        <div class="summary-item">
+          <span>Spam Detected:</span>
+          <span class="summary-value" id="spamDetected">0</span>
+        </div>
+        <div class="summary-item">
+          <span>By Header:</span>
+          <span class="summary-value" id="byHeader">0</span>
+        </div>
+        <div class="summary-item">
+          <span>By ML:</span>
+          <span class="summary-value" id="byML">0</span>
+        </div>
+        <div class="summary-item">
+          <span>Scan Time:</span>
+          <span class="summary-value" id="scanTime">-</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="filters">
+      <label>Filter:</label>
+      <select id="filterMethod">
+        <option value="all">All Detection Methods</option>
+        <option value="header">Header Only</option>
+        <option value="ml">ML Only</option>
+      </select>
+      <select id="filterProbability">
+        <option value="all">All Probabilities</option>
+        <option value="high">High (>80%)</option>
+        <option value="medium">Medium (50-80%)</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="Search subject or sender...">
+    </div>
+
+    <div class="batch-actions">
+      <button class="btn-batch-move" id="moveSelectedBtn">Move Selected to Spam</button>
+      <button class="btn-batch-safe" id="markSafeBtn">Mark Selected as Safe</button>
+      <span id="selectedCount" style="line-height: 40px; margin-left: 10px; color: #666;">0 selected</span>
+    </div>
+
+    <div class="results-table">
+      <table>
+        <thead>
+          <tr>
+            <th class="checkbox-cell">
+              <input type="checkbox" id="selectAll" class="select-all">
+            </th>
+            <th class="sortable" data-sort="subject">Subject</th>
+            <th class="sortable" data-sort="sender">From</th>
+            <th class="sortable" data-sort="date">Date</th>
+            <th class="sortable" data-sort="probability">Probability</th>
+            <th>Top Keywords</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody">
+          <tr>
+            <td colspan="7" class="loading">
+              <div class="spinner"></div>
+              Loading results...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="results.js"></script>
+</body>
+</html>

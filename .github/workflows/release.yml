@@ -1,0 +1,56 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Update manifest version
+        run: |
+          sed -i 's/"version": "[^"]*"/"version": "${{ steps.get_version.outputs.VERSION }}"/' manifest.json
+
+      - name: Build XPI package
+        run: |
+          zip -r spam-guard-${{ steps.get_version.outputs.VERSION }}.xpi \
+            manifest.json \
+            background.js \
+            icons/ \
+            options/ \
+            popup/ \
+            results/ \
+            -x "*.md" \
+            -x "*.git*" \
+            -x "*.github*"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Spam Guard v${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Spam Guard v${{ steps.get_version.outputs.VERSION }}
+
+            ### Installation
+            1. Download `spam-guard-${{ steps.get_version.outputs.VERSION }}.xpi`
+            2. Open Thunderbird → Add-ons and Themes
+            3. Click gear icon → Install Add-on From File
+            4. Select the downloaded `.xpi` file
+
+            ### Changes
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+          files: spam-guard-${{ steps.get_version.outputs.VERSION }}.xpi
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

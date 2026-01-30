@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Spam Guard - Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #0060df;
+      padding-bottom: 10px;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .checkbox-label input {
+      margin-right: 10px;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      background: white;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .description {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button.primary {
+      background-color: #0060df;
+      color: white;
+    }
+
+    button.primary:hover {
+      background-color: #0045a0;
+    }
+
+    button.secondary {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+
+    button.secondary:hover {
+      background-color: #d0d0d0;
+    }
+
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .status.success {
+      background-color: #d4edda;
+      color: #155724;
+      display: block;
+    }
+
+    .status.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      display: block;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #0060df;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spam Guard Settings</h1>
+
+  <div class="section">
+    <h2>General Settings</h2>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="enabled">
+        Enable spam detection
+      </label>
+      <p class="description">When enabled, incoming emails will be automatically scanned for the X-HINES-IMSS-SPAM header.</p>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="autoScan">
+        Auto-scan new messages
+      </label>
+      <p class="description">Automatically scan new incoming messages.</p>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="notifyOnMove">
+        Show notifications when moving spam
+      </label>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="logActions">
+        Log actions to console
+      </label>
+      <p class="description">Log spam detection and move actions to the browser console for debugging.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Target Folder</h2>
+
+    <div class="form-group">
+      <label for="targetFolder">Move spam to folder:</label>
+      <select id="targetFolder">
+        <option value="">Auto-detect Spam/Junk folder</option>
+      </select>
+      <p class="description">Select the folder where detected spam messages should be moved. Leave as "Auto-detect" to use the account's default Spam/Junk folder.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="targetFolderPath">Or specify folder name:</label>
+      <input type="text" id="targetFolderPath" placeholder="Spam">
+      <p class="description">If auto-detect doesn't find the right folder, specify the folder name here (e.g., "Spam", "Junk", "垃圾邮件").</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>ML Classifier Settings</h2>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="useMLClassifier">
+        Enable ML-based spam detection
+      </label>
+      <p class="description">Use TF-IDF + Naive Bayes classifier to detect spam in addition to header detection.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="mlThreshold">ML detection threshold:</label>
+      <select id="mlThreshold">
+        <option value="0.5">50% (More detections, more false positives)</option>
+        <option value="0.6">60%</option>
+        <option value="0.7">70% (Recommended)</option>
+        <option value="0.8">80%</option>
+        <option value="0.9">90% (Fewer detections, fewer false positives)</option>
+      </select>
+      <p class="description">Show in results when confidence exceeds this threshold.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="autoMoveThreshold">Auto-move threshold:</label>
+      <select id="autoMoveThreshold">
+        <option value="0.95">95%</option>
+        <option value="0.99">99% (Recommended)</option>
+        <option value="1.0">100% (Header only, no ML auto-move)</option>
+      </select>
+      <p class="description">Automatically move to spam folder when confidence exceeds this threshold. Only affects new incoming emails.</p>
+    </div>
+
+    <div class="form-group">
+      <label for="scanDaysRange">Default scan time range:</label>
+      <select id="scanDaysRange">
+        <option value="50">Last 50 days</option>
+        <option value="100">Last 100 days</option>
+        <option value="1000">Last 1000 days</option>
+        <option value="0">All time</option>
+      </select>
+      <p class="description">Only scan emails within this time range.</p>
+    </div>
+
+    <div class="form-group">
+      <label>Classifier Info:</label>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="vocabSize">0</div>
+          <div class="stat-label">Vocabulary Size</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="trainingSize">0</div>
+          <div class="stat-label">Training Samples</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="spamSamples">0</div>
+          <div class="stat-label">Spam Samples</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="hamSamples">0</div>
+          <div class="stat-label">Ham Samples</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Training Status:</label>
+      <p class="description" id="trainingStatus">Ready</p>
+    </div>
+
+    <div class="button-group">
+      <button class="primary" id="trainFromFoldersBtn">Train from Spam/Inbox Folders</button>
+      <button class="secondary" id="retrainBtn">Retrain with Current Data</button>
+    </div>
+    <p class="description">Training reads spam samples from Spam/Junk folders and equal number of ham samples from Inbox.</p>
+  </div>
+
+  <div class="section">
+    <h2>Statistics</h2>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="scannedCount">0</div>
+        <div class="stat-label">Messages Scanned</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="movedCount">0</div>
+        <div class="stat-label">Spam Moved</div>
+      </div>
+    </div>
+    <p class="description" id="lastScanTime">Last scan: Never</p>
+    <div class="button-group">
+      <button class="secondary" id="resetStats">Reset Statistics</button>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button class="primary" id="saveBtn">Save Settings</button>
+    <button class="secondary" id="restoreBtn">Restore Defaults</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
