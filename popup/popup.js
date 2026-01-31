@@ -6,11 +6,9 @@ const elements = {
   scannedCount: document.getElementById("scannedCount"),
   movedCount: document.getElementById("movedCount"),
   lastScan: document.getElementById("lastScan"),
-  scanSelectedBtn: document.getElementById("scanSelectedBtn"),
   scanAllBtn: document.getElementById("scanAllBtn"),
   settingsBtn: document.getElementById("settingsBtn"),
   resultMessage: document.getElementById("resultMessage"),
-  openOptions: document.getElementById("openOptions"),
   // Progress elements
   progressContainer: document.getElementById("progressContainer"),
   progressStats: document.getElementById("progressStats"),
@@ -19,10 +17,34 @@ const elements = {
   progressScanned: document.getElementById("progressScanned"),
   progressMoved: document.getElementById("progressMoved"),
   // Scan options
+  accountSelect: document.getElementById("accountSelect"),
   scanRange: document.getElementById("scanRange")
 };
 
 let progressInterval = null;
+
+// Load accounts list
+async function loadAccounts() {
+  try {
+    const response = await browser.runtime.sendMessage({ action: "getAccounts" });
+    const { accounts } = response;
+
+    // Clear existing options except "All Accounts"
+    elements.accountSelect.innerHTML = '<option value="all">All Accounts</option>';
+
+    // Add each account
+    if (accounts && accounts.length > 0) {
+      accounts.forEach(account => {
+        const option = document.createElement("option");
+        option.value = account.id;
+        option.textContent = account.name || account.id;
+        elements.accountSelect.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error("Error loading accounts:", error);
+  }
+}
 
 // Load current status
 async function loadStatus() {
@@ -49,6 +71,9 @@ async function loadStatus() {
     if (settings.scanDaysRange && elements.scanRange) {
       elements.scanRange.value = settings.scanDaysRange.toString();
     }
+
+    // Load accounts
+    await loadAccounts();
 
   } catch (error) {
     console.error("Error loading status:", error);
@@ -87,29 +112,6 @@ async function toggleEnabled() {
     updateStatusIndicator(response.enabled);
   } catch (error) {
     console.error("Error toggling:", error);
-  }
-}
-
-// Scan selected messages
-async function scanSelected() {
-  elements.scanSelectedBtn.classList.add("loading");
-  elements.scanSelectedBtn.disabled = true;
-
-  try {
-    const response = await browser.runtime.sendMessage({ action: "scanSelected" });
-    const { result } = response;
-
-    showResult(`Scanned ${result.scanned} messages, moved ${result.moved} spam`, "success");
-
-    // Refresh stats
-    await loadStatus();
-
-  } catch (error) {
-    console.error("Error scanning selected:", error);
-    showResult("Error scanning messages", "error");
-  } finally {
-    elements.scanSelectedBtn.classList.remove("loading");
-    elements.scanSelectedBtn.disabled = false;
   }
 }
 
@@ -191,14 +193,14 @@ function stopProgressPolling() {
   }
 }
 
-// Scan all inboxes with progress
+// Scan inboxes with progress
 async function scanAll() {
   elements.scanAllBtn.classList.add("loading");
   elements.scanAllBtn.disabled = true;
-  elements.scanSelectedBtn.disabled = true;
 
-  // Get selected scan range
+  // Get selected options
   const daysRange = parseInt(elements.scanRange.value) || 50;
+  const accountId = elements.accountSelect.value;
 
   // Start progress polling
   startProgressPolling();
@@ -206,7 +208,8 @@ async function scanAll() {
   try {
     const response = await browser.runtime.sendMessage({
       action: "scanAll",
-      daysRange: daysRange === 0 ? null : daysRange
+      daysRange: daysRange === 0 ? null : daysRange,
+      accountId: accountId === "all" ? null : accountId
     });
     const { result } = response;
 
@@ -223,21 +226,20 @@ async function scanAll() {
     // Hide progress after delay and show result
     setTimeout(() => {
       hideProgress();
-      showResult(`Scanned ${result.scanned} messages, moved ${result.moved} spam`, "success");
+      showResult(`Scanned ${result.scanned} messages, found ${result.moved} spam`, "success");
     }, 1500);
 
     // Refresh stats
     await loadStatus();
 
   } catch (error) {
-    console.error("Error scanning all:", error);
+    console.error("Error scanning:", error);
     stopProgressPolling();
     hideProgress();
     showResult("Error scanning messages", "error");
   } finally {
     elements.scanAllBtn.classList.remove("loading");
     elements.scanAllBtn.disabled = false;
-    elements.scanSelectedBtn.disabled = false;
   }
 }
 
@@ -273,10 +275,8 @@ async function saveScanRange() {
 
 // Event listeners
 elements.enableToggle.addEventListener("change", toggleEnabled);
-elements.scanSelectedBtn.addEventListener("click", scanSelected);
 elements.scanAllBtn.addEventListener("click", scanAll);
 elements.settingsBtn.addEventListener("click", openOptions);
-elements.openOptions.addEventListener("click", openOptions);
 elements.scanRange.addEventListener("change", saveScanRange);
 
 // Cleanup on popup close

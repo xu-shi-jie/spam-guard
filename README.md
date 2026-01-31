@@ -4,7 +4,7 @@ Intelligent spam detection for Thunderbird using header analysis and ML classifi
 
 ## Features
 
-- **Header Detection**: Auto-detect `X-HINES-IMSS-SPAM: SPAM` header (100% confidence)
+- **Header Detection**: Auto-detect spam headers (X-Spam-Status, X-Spam-Flag, etc.)
 - **ML Classifier**: TF-IDF + Naive Bayes classifier for spam detection
 - **Auto-scan**: Automatically scan and move spam when new emails arrive
 - **Results Page**: View all detected spam in a sortable table with batch operations
@@ -72,7 +72,7 @@ Intelligent spam detection for Thunderbird using header analysis and ML classifi
 ## How It Works
 
 ### 1. Header Detection
-Detects `X-HINES-IMSS-SPAM: SPAM` header added by enterprise email security systems.
+Detects common spam headers added by email security systems (X-Spam-Status, X-Spam-Flag, etc.).
 
 ### 2. ML Classifier
 - **Features**: Sender name, email domain, TLD, subject, body (TF-IDF)

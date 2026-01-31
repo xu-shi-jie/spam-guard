@@ -1,8 +1,12 @@
 // Spam Guard - Background Script
-// Detects X-HINES-IMSS-SPAM: SPAM header and uses ML classifier
+// Detects spam headers and uses ML classifier
 
-const SPAM_HEADER = "x-hines-imss-spam";
-const SPAM_VALUE = "SPAM";
+// Configurable spam headers to detect
+const SPAM_HEADERS = [
+  { header: "x-spam-status", value: "Yes" },
+  { header: "x-spam-flag", value: "YES" },
+  { header: "x-hines-imss-spam", value: "SPAM" }
+];
 
 // ============================================
 // TF-IDF Naive Bayes Classifier
@@ -618,11 +622,13 @@ async function getMessageHeaders(messageId) {
 
 // Check if message has spam header
 function hasSpamHeader(headers) {
-  const headerValue = headers[SPAM_HEADER];
-  if (headerValue) {
-    for (const value of headerValue) {
-      if (value.toUpperCase().includes(SPAM_VALUE)) {
-        return true;
+  for (const check of SPAM_HEADERS) {
+    const headerValue = headers[check.header];
+    if (headerValue) {
+      for (const value of headerValue) {
+        if (value.toUpperCase().includes(check.value.toUpperCase())) {
+          return true;
+        }
       }
     }
   }
@@ -870,7 +876,7 @@ function countFoldersRecursive(folders) {
 }
 
 // Scan all accounts with ML
-async function scanAllAccountsWithML(daysRange = null) {
+async function scanAllAccountsWithML(daysRange = null, accountId = null) {
   if (!settings.enabled) return { scanned: 0, predictions: [] };
 
   const effectiveDaysRange = daysRange || settings.scanDaysRange;
@@ -888,8 +894,13 @@ async function scanAllAccountsWithML(daysRange = null) {
   let totalScanned = 0;
   let allPredictions = [];
 
-  const accounts = await browser.accounts.list();
+  let accounts = await browser.accounts.list();
   const skipTypes = ["junk", "trash", "sent", "drafts", "outbox"];
+
+  // Filter to single account if specified
+  if (accountId) {
+    accounts = accounts.filter(a => a.id === accountId);
+  }
 
   for (const account of accounts) {
     scanProgress.totalFolders += countFolders(account.folders, skipTypes);
@@ -1017,8 +1028,12 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
       await saveStats();
       return { stats };
 
+    case "getAccounts":
+      const allAccounts = await browser.accounts.list();
+      return { accounts: allAccounts.map(a => ({ id: a.id, name: a.name })) };
+
     case "scanAll":
-      const scanResult = await scanAllAccountsWithML(message.daysRange);
+      const scanResult = await scanAllAccountsWithML(message.daysRange, message.accountId);
       await openResultsTab();
       return { result: { scanned: scanResult.scanned, moved: scanResult.predictions.length } };
 
@@ -1112,7 +1127,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
 
         return { success: false, error: "No mail tab available" };
       } catch (error) {
-        console.error("[IMSS] Error viewing message:", error);
+        console.error("[Spam Guard] Error viewing message:", error);
         return { success: false, error: error.message };
       }
 

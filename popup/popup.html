@@ -365,8 +365,14 @@
   </div>
 
   <div class="scan-options">
-    <label for="scanRange">Scan emails from:</label>
+    <label for="accountSelect">Account:</label>
+    <select id="accountSelect">
+      <option value="all">All Accounts</option>
+    </select>
+
+    <label for="scanRange" style="margin-top: 8px;">Time range:</label>
     <select id="scanRange">
+      <option value="10">Last 10 days</option>
       <option value="50">Last 50 days</option>
       <option value="100">Last 100 days</option>
       <option value="1000">Last 1000 days</option>
@@ -379,16 +385,12 @@
   </div>
 
   <div class="button-group">
-    <button class="primary" id="scanSelectedBtn">
-      <span class="spinner"></span>
-      <span class="btn-text">Scan Selected Messages</span>
-    </button>
     <button class="primary" id="scanAllBtn">
       <span class="spinner"></span>
-      <span class="btn-text">Scan All Inboxes</span>
+      <span class="btn-text">Scan Inbox</span>
     </button>
     <button class="secondary" id="settingsBtn">
-      Open Settings
+      Settings
     </button>
   </div>
 
@@ -408,10 +410,6 @@
   </div>
 
   <div class="result-message" id="resultMessage"></div>
-
-  <div class="footer">
-    <a href="#" id="openOptions">Advanced Settings</a>
-  </div>
 
   <script src="popup.js"></script>
 </body>
