@@ -2,6 +2,8 @@
 
 Intelligent spam detection for Thunderbird using header analysis and ML classification.
 
+[日本語](README.ja.md)
+
 ## Features
 
 - **Header Detection**: Auto-detect spam headers (X-Spam-Status, X-Spam-Flag, etc.)
